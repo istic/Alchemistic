@@ -95,14 +95,6 @@ function update_env_with_ngrok_urls() {
         fi
     done < "${WORKDIR}/.env.ngrok"
 
-    # Update public/hot if needed
-    if grep -q "^NGROK_DELTA_VITE_URL=" "${WORKDIR}/.env.ngrok"; then
-        local VITE_URL=$(grep "^NGROK_DELTA_VITE_URL=" "${WORKDIR}/.env.ngrok" | cut -d'=' -f2)
-        if [[ -f "${WORKDIR}/public/hot" ]]; then
-            echo "https://${VITE_URL}" > "${WORKDIR}/public/hot"
-            echo "Updated public/hot with Vite URL"
-        fi
-    fi
 
     rm -f "${WORKDIR}/.env.ngrok"
     echo "Environment update complete!"
