@@ -1,0 +1,18 @@
+version: 3
+agent:
+  authtoken: $NGROK_AUTHTOKEN
+endpoints:
+  - name: delta_app
+    url: $NGROK_URL
+    upstream:
+      url: http://streamdelta:80
+
+  - name: delta_ws
+    url: ${NGROK_WS_URL}
+    upstream:
+      url: http://reverb:8080
+
+  - name: delta_vite
+    url: ${NGROK_VITE_URL}
+    upstream:
+      url: http://vite:5173
