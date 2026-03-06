@@ -33,13 +33,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: ${{ vars.NODE_VERSION }}
 
       - name: Install Node Dependencies
         run: npm i
-
-      - name: Add Flux Credentials Loaded From ENV
-        run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
 
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader

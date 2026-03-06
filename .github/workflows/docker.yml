@@ -24,11 +24,8 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.4"
+          php-version: ${{ vars.PHP_VERSION }}
           tools: composer:v2
-
-      - name: Configure Flux credentials
-        run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
 
       - name: Install PHP dependencies
         run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
@@ -36,7 +33,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: ${{ vars.NODE_VERSION }}
 
       - name: Install Node dependencies
         run: npm ci
