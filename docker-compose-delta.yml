@@ -1,4 +1,4 @@
-name: istic-manage
+name: stream-delta
 services:
   laravelbase:
     build:
@@ -17,8 +17,8 @@ services:
       - sail
     deploy:
         replicas: 0
-  application:
-    image: istic-manage-laravelbase
+  streamdelta.dev:
+    image: stream-delta-laravelbase
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
@@ -34,13 +34,13 @@ services:
     networks:
       sail:
         aliases:
-          - istic-manage
+          - streamdelta
     depends_on:
       - redis
       - mailpit
 
   vite:
-    image: istic-manage-laravelbase
+    image: stream-delta-laravelbase
     command: npm run dev
     working_dir: /var/www/html
     ports:
@@ -52,49 +52,49 @@ services:
     networks:
       - sail
     depends_on:
-      - application
+      - streamdelta.dev
 
-#   reverb:
-#     image: istic-manage-laravelbase
-#     command: php artisan reverb:start --host=0.0.0.0 --port=8080
-#     working_dir: /var/www/html
-#     ports:
-#       - "${REVERB_SERVER_PORT:-8080}:8080"
-#     environment:
-#       WWWUSER: "${WWWUSER}"
-#       LARAVEL_SAIL: 1
-#       REDIS_HOST: redis
-#     volumes:
-#       - ".:/var/www/html"
-#     networks:
-#       - sail
-#     depends_on:
-#       redis:
-#         condition: service_healthy
-#     restart: unless-stopped
+  reverb:
+    image: stream-delta-laravelbase
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    working_dir: /var/www/html
+    ports:
+      - "${REVERB_SERVER_PORT:-8080}:8080"
+    environment:
+      WWWUSER: "${WWWUSER}"
+      LARAVEL_SAIL: 1
+      REDIS_HOST: redis
+    volumes:
+      - ".:/var/www/html"
+    networks:
+      - sail
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
 
-#   horizon:
-#     image: istic-manage-laravelbase
-#     command: php artisan horizon
-#     working_dir: /var/www/html
-#     environment:
-#       WWWUSER: "${WWWUSER}"
-#       LARAVEL_SAIL: 1
-#       REDIS_HOST: redis
-#       REVERB_APP_ID: "${REVERB_APP_ID}"
-#       REVERB_APP_KEY: "${REVERB_APP_KEY}"
-#       REVERB_APP_SECRET: "${REVERB_APP_SECRET}"
-#       REVERB_HOST: reverb
-#       REVERB_PORT: "${REVERB_SERVER_PORT:-8080}"
-#       REVERB_SCHEME: http
-#     volumes:
-#       - ".:/var/www/html"
-#     networks:
-#       - sail
-#     depends_on:
-#       redis:
-#         condition: service_healthy
-#     restart: unless-stopped
+  horizon:
+    image: stream-delta-laravelbase
+    command: php artisan horizon
+    working_dir: /var/www/html
+    environment:
+      WWWUSER: "${WWWUSER}"
+      LARAVEL_SAIL: 1
+      REDIS_HOST: redis
+      REVERB_APP_ID: "${REVERB_APP_ID}"
+      REVERB_APP_KEY: "${REVERB_APP_KEY}"
+      REVERB_APP_SECRET: "${REVERB_APP_SECRET}"
+      REVERB_HOST: reverb
+      REVERB_PORT: "${REVERB_SERVER_PORT:-8080}"
+      REVERB_SCHEME: http
+    volumes:
+      - ".:/var/www/html"
+    networks:
+      - sail
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
 
   redis:
     healthcheck:
@@ -142,15 +142,43 @@ services:
     networks:
       - sail
     depends_on:
-      - application
+      - streamdelta.dev
     extra_hosts:
-      - "application:host-gateway"
+      - "streamdelta.dev:host-gateway"
 
+  tubular:
+    ### Use the local image built from the Dockerfile in the tubular directory
+    image: tubular:local
+    build:
+      context: ../tubular
+      dockerfile: Dockerfile
+    ### /End Use the local image
+
+    ### Or, Use the github version of tubular
+    # image: 'aquarion/tubular:latest'
+    ### /end Use the github version
+    depends_on:
+      redis:
+        condition: service_started
+        required: true
+    env_file:
+      - .env
+    networks:
+      - sail
+    ports:
+      - ${TUBULAR_CALLBACK_PORT:-9191}:${TUBULAR_CALLBACK_PORT:-9191}
+    restart: unless-stopped
+    volumes:
+      - bind:
+          create_host_path: true
+        source: /home/aquarion/code/aquarion/stream-delta/storage/logs
+        target: /var/log/tubular
+        type: bind
 networks:
   sail:
     driver: bridge
-    name: istic-manage_sail
+    name: stream-delta_sail
 volumes:
   sail-redis:
     driver: local
-    name: istic-manage_sail-redis
+    name: stream-delta_sail-redis
