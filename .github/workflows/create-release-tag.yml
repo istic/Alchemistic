@@ -14,7 +14,12 @@ on:
           - major
 
 jobs:
+  test:
+    uses: ./.github/workflows/tests.yml
+    secrets: inherit
+
   tag:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: write
