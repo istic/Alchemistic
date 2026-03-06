@@ -18,6 +18,14 @@
                     {{ __('Dashboard') }}
                 </flux:sidebar.item>
             </flux:sidebar.group>
+
+            @if (Auth::check() && Auth::user()->hasPermission('admin'))
+            <flux:sidebar.group :heading="__('Admin')" class="grid">
+                <flux:sidebar.item icon="users" :href="route('admin.users')" :current="request()->routeIs('admin.users')" wire:navigate>
+                    {{ __('Users') }}
+                </flux:sidebar.item>
+            </flux:sidebar.group>
+            @endif
         </flux:sidebar.nav>
 
         <flux:spacer />
