@@ -5,7 +5,7 @@ endpoints:
   - name: delta_app
     url: $NGROK_URL
     upstream:
-      url: http://streamdelta:80
+      url: ${LOCAL_APP_URL}
 
   - name: delta_ws
     url: ${NGROK_WS_URL}

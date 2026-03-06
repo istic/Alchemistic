@@ -108,10 +108,14 @@ function update_env_with_ngrok_urls() {
     echo "Environment update complete!"
 }
 
+if [[ -z "$APP_PORT" ]]; then
+    export APP_PORT=80
+fi
+
 # If in Docker, wait for the main app to be ready
 if [[ "$IN_DOCKER" == true ]]; then
-    echo "[ngrok] Waiting for istic-manage.dev to be ready..."
-    until curl -sf "http://istic-manage.dev:${APP_PORT:-80}" > /dev/null 2>&1; do
+    echo "[ngrok] Waiting for application to be ready..."
+    until curl -sf "http://application:${APP_PORT}" > /dev/null 2>&1; do
         echo "[ngrok] Waiting for app..."
         sleep 2
     done
@@ -121,6 +125,7 @@ fi
 # Generate ngrok config
 echo "[ngrok] Generating ngrok configuration..."
 cd "${WORKDIR}"
+export LOCAL_APP_URL="http://application:${APP_PORT}"
 envsubst < ngrok.example.yaml > ngrok.generated.yaml
 
 # Start ngrok in background if in Docker, foreground otherwise
@@ -129,12 +134,24 @@ if [[ "$IN_DOCKER" == true ]]; then
     ngrok start --all --config ./ngrok.generated.yaml --log=stdout &
     NGROK_PID=$!
 
+    if [[ -d /proc/$NGROK_PID ]]; then
+        echo "[ngrok] Ngrok started with PID $NGROK_PID"
+    else
+        echo "ERROR: Failed to start ngrok"
+        exit 1
+    fi
+
     # Wait for ngrok API to be ready
     echo "[ngrok] Waiting for ngrok API..."
     sleep 5
     until curl -sf http://127.0.0.1:4040/api/tunnels > /dev/null 2>&1; do
         echo "[ngrok] Waiting for ngrok API..."
         sleep 2
+        if [[ ! -d /proc/$NGROK_PID ]]; then
+            echo "ERROR: Ngrok process has exited unexpectedly"
+            cat ./ngrok.generated.yaml
+            exit 1
+        fi
     done
 
     echo "[ngrok] Ngrok is ready! Updating environment..."
