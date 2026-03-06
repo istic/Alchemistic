@@ -3,6 +3,7 @@
 use App\Mail\NewUserWelcome;
 use App\Models\Permission;
 use App\Models\User;
+use App\Rules\SshPublicKey;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -15,6 +16,8 @@ new #[Title('User Management')] class extends Component {
     public string $email = '';
     public bool $showCreateForm = false;
     public ?int $selectedUserId = null;
+    public array $sftpUsername = [];
+    public array $sftpPublicKey = [];
 
     public function mount(): void
     {
@@ -24,7 +27,7 @@ new #[Title('User Management')] class extends Component {
     #[Computed]
     public function users()
     {
-        return User::with('permissions')->orderBy('name')->get();
+        return User::with('permissions', 'sftpUsers')->orderBy('name')->get();
     }
 
     #[Computed]
@@ -42,6 +45,34 @@ new #[Title('User Management')] class extends Component {
     {
         User::findOrFail($userId)->permissions()->toggle($permissionId);
         unset($this->users);
+    }
+
+    public function createSftpUser(int $userId): void
+    {
+        if (! empty($this->sftpPublicKey[$userId])) {
+            $this->sftpPublicKey[$userId] = SshPublicKey::normalize($this->sftpPublicKey[$userId]);
+        }
+
+        $this->validate([
+            "sftpUsername.{$userId}"  => ['required', 'string', 'max:32', 'alpha_dash', 'unique:sftp_users,username'],
+            "sftpPublicKey.{$userId}" => ['nullable', 'string', new SshPublicKey],
+        ], [], [
+            "sftpUsername.{$userId}"  => 'username',
+            "sftpPublicKey.{$userId}" => 'public key',
+        ]);
+
+        $user = User::findOrFail($userId);
+
+        abort_if($user->sftpUsers()->exists(), 422, 'SFTP account already exists.');
+
+        $user->sftpUsers()->create([
+            'username'   => $this->sftpUsername[$userId],
+            'public_key' => $this->sftpPublicKey[$userId] ?? null ?: null,
+        ]);
+
+        unset($this->sftpUsername[$userId], $this->sftpPublicKey[$userId], $this->users);
+
+        $this->dispatch("sftp-created-{$userId}");
     }
 
     public function createUser(): void
@@ -62,6 +93,7 @@ new #[Title('User Management')] class extends Component {
         Mail::to($user)->send(new NewUserWelcome($user, $plainPassword));
 
         $this->reset('name', 'email', 'showCreateForm');
+        unset($this->users);
         $this->dispatch('user-created');
     }
 }; ?>
@@ -123,23 +155,74 @@ new #[Title('User Management')] class extends Component {
                             size="sm"
                             variant="{{ $selectedUserId === $user->id ? 'primary' : 'ghost' }}"
                             wire:click="selectUser({{ $user->id }})"
-                        >{{ __('Permissions') }}</flux:button>
+                        >{{ __('Manage') }}</flux:button>
                     </flux:table.cell>
                 </flux:table.row>
 
-                @if ($selectedUserId === $user->id && $this->permissions->isNotEmpty())
+                @if ($selectedUserId === $user->id)
                     <flux:table.row>
                         <flux:table.cell colspan="5" class="bg-zinc-50 dark:bg-zinc-800/50">
-                            <div class="flex flex-wrap gap-4 py-2">
-                                @foreach ($this->permissions as $permission)
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <flux:checkbox
-                                            wire:click="togglePermission({{ $user->id }}, {{ $permission->id }})"
-                                            :checked="$user->permissions->contains('id', $permission->id)"
-                                        />
-                                        <span class="text-sm">{{ $permission->label }}</span>
-                                    </label>
-                                @endforeach
+                            <div class="flex flex-col gap-6 py-3 px-1">
+
+                                {{-- Permissions --}}
+                                <div>
+                                    <flux:heading size="sm" class="mb-2">{{ __('Permissions') }}</flux:heading>
+                                    <div class="flex flex-wrap gap-4">
+                                        @foreach ($this->permissions as $permission)
+                                            <label class="flex items-center gap-2 cursor-pointer">
+                                                <flux:checkbox
+                                                    wire:click="togglePermission({{ $user->id }}, {{ $permission->id }})"
+                                                    :checked="$user->permissions->contains('id', $permission->id)"
+                                                />
+                                                <span class="text-sm">{{ $permission->label }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                {{-- SFTP --}}
+                                @if ($user->permissions->contains('name', 'sftp_access'))
+                                    <div>
+                                        <flux:heading size="sm" class="mb-2">{{ __('SFTP Account') }}</flux:heading>
+                                        @php $sftpUser = $user->sftpUsers->first(); @endphp
+                                        @if ($sftpUser)
+                                            <flux:text class="font-mono">{{ $sftpUser->username }}</flux:text>
+                                            @if ($sftpUser->public_key)
+                                                <flux:text size="sm" class="font-mono text-zinc-500 mt-1">
+                                                    {{ $sftpUser->public_key_type }} {{ $sftpUser->public_key_fingerprint }}
+                                                </flux:text>
+                                            @endif
+                                        @else
+                                            <form wire:submit="createSftpUser({{ $user->id }})" class="space-y-3">
+                                                <div class="flex items-end gap-3">
+                                                    <flux:input
+                                                        wire:model="sftpUsername.{{ $user->id }}"
+                                                        :label="__('Username')"
+                                                        type="text"
+                                                        size="sm"
+                                                        placeholder="username"
+                                                    />
+                                                    <flux:button type="submit" size="sm" variant="primary">
+                                                        {{ __('Create') }}
+                                                    </flux:button>
+                                                    <x-action-message on="sftp-created-{{ $user->id }}">
+                                                        {{ __('Created.') }}
+                                                    </x-action-message>
+                                                </div>
+                                                <flux:textarea
+                                                    wire:model="sftpPublicKey.{{ $user->id }}"
+                                                    :label="__('SSH public key (optional)')"
+                                                    :placeholder="__('ssh-ed25519 AAAA...')"
+                                                    rows="2"
+                                                    class="font-mono text-xs"
+                                                />
+                                            </form>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                {{-- Future services go here, gated on their respective permission --}}
+
                             </div>
                         </flux:table.cell>
                     </flux:table.row>

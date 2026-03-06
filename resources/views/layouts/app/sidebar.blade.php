@@ -19,6 +19,14 @@
                 </flux:sidebar.item>
             </flux:sidebar.group>
 
+            @if (Auth::check() && (Auth::user()->hasPermission('sftp_access') || Auth::user()->hasPermission('admin')))
+            <flux:sidebar.group :heading="__('Services')" class="grid">
+                <flux:sidebar.item icon="server" :href="route('sftp.password')" :current="request()->routeIs('sftp.password')" wire:navigate>
+                    {{ __('SFTP') }}
+                </flux:sidebar.item>
+            </flux:sidebar.group>
+            @endif
+
             @if (Auth::check() && Auth::user()->hasPermission('admin'))
             <flux:sidebar.group :heading="__('Admin')" class="grid">
                 <flux:sidebar.item icon="users" :href="route('admin.users')" :current="request()->routeIs('admin.users')" wire:navigate>

@@ -11,6 +11,7 @@ class SftpUser extends Model
         'user_id',
         'username',
         'password',
+        'public_key',
         'uid',
         'gid',
     ];
@@ -35,6 +36,36 @@ class SftpUser extends Model
         }
 
         $this->attributes['password'] = $value;
+    }
+
+    public function getPublicKeyFingerprintAttribute(): ?string
+    {
+        if (! $this->public_key) {
+            return null;
+        }
+
+        $parts = preg_split('/\s+/', trim($this->public_key), 3);
+
+        if (count($parts) < 2) {
+            return null;
+        }
+
+        $decoded = base64_decode($parts[1], strict: true);
+
+        if ($decoded === false) {
+            return null;
+        }
+
+        return 'SHA256:' . rtrim(base64_encode(hash('sha256', $decoded, true)), '=');
+    }
+
+    public function getPublicKeyTypeAttribute(): ?string
+    {
+        if (! $this->public_key) {
+            return null;
+        }
+
+        return preg_split('/\s+/', trim($this->public_key), 2)[0] ?? null;
     }
 
     public function user(): BelongsTo
