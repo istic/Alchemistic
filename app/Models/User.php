@@ -49,7 +49,14 @@ class User extends Authenticatable
 
     public function hasPermission(string $name): bool
     {
-        return $this->permissions->contains('name', $name);
+        if ($this->permissions->contains('name', $name)) {
+            return true;
+        }
+        if ($this->permissions->contains('name', 'admin')) {
+            return true;
+        }
+
+        return false;
     }
 
     public function initials(): string

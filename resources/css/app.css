@@ -8,6 +8,15 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+
+
+/* Istic Colours
+    Main: FFD300
+    Secondary: A90DFF
+    Tertiary: 00FFF7
+    Complementary: 0DFFB8
+    Comp-dark: 1B0073
+*/
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
@@ -23,16 +32,26 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
+    --color-main: #FFD300;
+    --color-secondary: #A90DFF;
+    --color-tertiary: #00FFF7;
+    --color-complementary: #0DFFB8;
+    --color-comp-dark: #1B0073;
+
+    /* --color-accent: var(--color-neutral-800);
     --color-accent-content: var(--color-neutral-800);
-    --color-accent-foreground: var(--color-white);
+    --color-accent-foreground: var(--color-white); */
+
+    --color-accent: #A90DFF;
+    --color-accent-content: #A90DFF;
+    --color-accent-foreground: #FFD300;
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-accent: #FFD300;
+        --color-accent-content: #FFD300;
+        --color-accent-foreground: #A90DFF;
     }
 }
 
