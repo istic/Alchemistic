@@ -1,0 +1,16 @@
+name: "[Auto] Merge Dependabot Updates"
+
+on:
+  workflow_run:
+    workflows: ["[Tests] Acceptance Testing"]
+    types:
+      - completed
+    branches-ignore:
+      - 'main'
+
+jobs:
+  automerge:
+    uses: istic/shared-workflows/.github/workflows/auto-merge-dependabot.yml@main
+    permissions:
+      pull-requests: write
+      contents: write
