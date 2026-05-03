@@ -11,12 +11,18 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('User Management')] class extends Component {
+new #[Title('User Management')] class extends Component
+{
     public string $name = '';
+
     public string $email = '';
+
     public bool $showCreateForm = false;
+
     public ?int $selectedUserId = null;
+
     public array $sftpUsername = [];
+
     public array $sftpPublicKey = [];
 
     public function mount(): void
@@ -54,10 +60,10 @@ new #[Title('User Management')] class extends Component {
         }
 
         $this->validate([
-            "sftpUsername.{$userId}"  => ['required', 'string', 'max:32', 'alpha_dash', 'unique:sftp_users,username'],
+            "sftpUsername.{$userId}" => ['required', 'string', 'max:32', 'alpha_dash', 'unique:sftp_users,username'],
             "sftpPublicKey.{$userId}" => ['nullable', 'string', new SshPublicKey],
         ], [], [
-            "sftpUsername.{$userId}"  => 'username',
+            "sftpUsername.{$userId}" => 'username',
             "sftpPublicKey.{$userId}" => 'public key',
         ]);
 
@@ -66,7 +72,7 @@ new #[Title('User Management')] class extends Component {
         abort_if($user->sftpUsers()->exists(), 422, 'SFTP account already exists.');
 
         $user->sftpUsers()->create([
-            'username'   => $this->sftpUsername[$userId],
+            'username' => $this->sftpUsername[$userId],
             'public_key' => $this->sftpPublicKey[$userId] ?? null ?: null,
         ]);
 

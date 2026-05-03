@@ -27,8 +27,14 @@ class SftpUser extends Model
         });
     }
 
-    public function setPasswordAttribute(string $value): void
+    public function setPasswordAttribute(?string $value): void
     {
+        if ($value === null || $value === '') {
+            $this->attributes['password'] = null;
+
+            return;
+        }
+
         // Store as SHA512 crypt hash (compatible with /etc/shadow and atmoz/sftp)
         if (! str_starts_with($value, '$6$')) {
             $salt = '$6$'.substr(str_replace('+', '.', base64_encode(random_bytes(12))), 0, 16).'$';
@@ -56,7 +62,7 @@ class SftpUser extends Model
             return null;
         }
 
-        return 'SHA256:' . rtrim(base64_encode(hash('sha256', $decoded, true)), '=');
+        return 'SHA256:'.rtrim(base64_encode(hash('sha256', $decoded, true)), '=');
     }
 
     public function getPublicKeyTypeAttribute(): ?string
