@@ -1,0 +1,252 @@
+name: CI
+
+on:
+  push:
+    branches: [dependabot-updates, 'release/*']
+  pull_request:
+    branches: ['**']
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Release tag to build and deploy'
+        type: string
+        required: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Copy environment file
+        run: cp .env.example .env
+
+      - name: Generate application key
+        run: php artisan key:generate
+
+      - name: Create SQLite database file
+        run: touch database/database.sqlite
+
+      - name: Smoke-test migrations
+        run: php artisan migrate --force
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Build assets
+        run: npm run build
+
+      - name: Run tests
+        run: vendor/bin/pest
+
+  build-and-push:
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: |
+      github.ref != 'refs/heads/dependabot-updates' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Install PHP dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ inputs.tag || github.ref_name }},enable=${{ inputs.tag != '' || startsWith(github.ref, 'refs/tags/v') }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.tag || github.ref_name }},enable=${{ inputs.tag != '' || startsWith(github.ref, 'refs/tags/v') }}
+            type=sha
+            type=raw,value=latest,enable=${{ inputs.tag != '' || startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=staging,enable=${{ github.event_name == 'pull_request' }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/production/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            APP_VERSION=${{ inputs.tag || github.ref_name }}
+            APP_PR_NUMBER=${{ github.event.pull_request.number }}
+            APP_BRANCH=${{ github.head_ref }}
+
+  deploy-staging:
+    needs: build-and-push
+    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: true
+    permissions:
+      contents: read
+
+    steps:
+      - name: Deploy staging
+        uses: appleboy/ssh-action@v1
+        with:
+          host: firth.water.gkhs.net
+          username: alchemistic
+          key: ${{ secrets.FIRTH_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /home/docker/alchemistic-staging
+            timeout 300 docker compose pull || {
+              echo "ERROR: docker compose pull failed or timed out after 300s"
+              exit 1
+            }
+            docker compose up -d || {
+              echo "ERROR: docker compose up -d failed"
+              docker compose ps
+              docker compose logs --tail=50
+              exit 1
+            }
+            for i in $(seq 1 30); do
+              if docker compose exec -T app php artisan --version > /dev/null 2>&1; then
+                echo "Container ready after ${i} attempt(s)"
+                break
+              fi
+              if [ "$i" -eq 30 ]; then
+                echo "ERROR: Container failed to become ready after 30 attempts"
+                echo "--- Final health check output ---"
+                docker compose exec -T app php artisan --version || true
+                docker compose logs --tail=50 app
+                exit 1
+              fi
+              echo "Attempt ${i}/30: container not ready, waiting..."
+              sleep 2
+            done
+            docker compose exec -T app test -d /var/www/html/public/build || {
+              echo "ERROR: /var/www/html/public/build not found in container, aborting asset copy"
+              exit 1
+            }
+            rm -rf public/build && mkdir -p public/build
+            docker compose cp app:/var/www/html/public/build/. public/build/
+
+  deploy-production:
+    needs: build-and-push
+    if: inputs.tag != ''
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+
+    steps:
+      - name: Deploy production
+        uses: appleboy/ssh-action@v1
+        with:
+          host: firth.water.gkhs.net
+          username: alchemistic
+          key: ${{ secrets.FIRTH_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /home/docker/alchemistic
+            timeout 300 docker compose pull || {
+              echo "ERROR: docker compose pull failed or timed out after 300s"
+              exit 1
+            }
+            docker compose up -d || {
+              echo "ERROR: docker compose up -d failed"
+              docker compose ps
+              docker compose logs --tail=50
+              exit 1
+            }
+            for i in $(seq 1 30); do
+              if docker compose exec -T app php artisan --version > /dev/null 2>&1; then
+                echo "Container ready after ${i} attempt(s)"
+                break
+              fi
+              if [ "$i" -eq 30 ]; then
+                echo "ERROR: Container failed to become ready after 30 attempts"
+                echo "--- Final health check output ---"
+                docker compose exec -T app php artisan --version || true
+                docker compose logs --tail=50 app
+                exit 1
+              fi
+              echo "Attempt ${i}/30: container not ready, waiting..."
+              sleep 2
+            done
+            docker compose exec -T app test -d /var/www/html/public/build || {
+              echo "ERROR: /var/www/html/public/build not found in container, aborting asset copy"
+              exit 1
+            }
+            rm -rf public/build && mkdir -p public/build
+            docker compose cp app:/var/www/html/public/build/. public/build/

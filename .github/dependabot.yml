@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: "composer"
+    directory: "/"
+    target-branch: "dependabot-updates"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    target-branch: "dependabot-updates"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "dependabot-updates"
+    schedule:
+      interval: "daily"

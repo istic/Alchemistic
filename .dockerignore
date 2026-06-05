@@ -10,5 +10,7 @@ storage/framework/views
 storage/logs
 bootstrap/cache
 tests
+docs
 docker-compose*.yml
 *.md
+!README.md
