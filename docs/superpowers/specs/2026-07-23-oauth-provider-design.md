@@ -20,8 +20,8 @@ support, no granular per-scope consent.
     endpoint.
   - `GET /oauth/userinfo` — standard OIDC userinfo endpoint.
   - `GET /.well-known/openid-configuration` — discovery document.
-  - `GET /oauth/jwks` — Passport's existing public key endpoint, reused for
-    `id_token` verification.
+  - `GET /oauth/jwks` — new public key endpoint (Passport does not ship one),
+    exposing Passport's RSA public key as a JWK for `id_token` verification.
 - Only the **Authorization Code + PKCE** grant is enabled. No client
   credentials grant, no password grant, no device code grant, no personal
   access tokens.
@@ -73,7 +73,7 @@ a user consents to per-scope.
 | `POST /oauth/token` | Passport, extended | Token endpoint. Extended to also mint an `id_token`. |
 | `GET /oauth/userinfo` | New | Returns OIDC claims for the user identified by the presented access token. |
 | `GET /.well-known/openid-configuration` | New | Discovery document (issuer, endpoint URLs, supported scopes/claims/grant types/signing algorithms). |
-| `GET /oauth/jwks` | Passport | Public key(s) used to verify `id_token` signatures. |
+| `GET /oauth/jwks` | New | Public key(s) used to verify `id_token` signatures (Passport has no built-in JWKS endpoint). |
 
 These routes sit outside the existing `auth`/`verified` web middleware group
 — Passport's authorization endpoint handles the login/authentication
