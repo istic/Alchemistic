@@ -129,7 +129,6 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=${{ inputs.tag || github.ref_name }},enable=${{ inputs.tag != '' || startsWith(github.ref, 'refs/tags/v') }}
             type=sha
             type=raw,value=latest,enable=${{ inputs.tag != '' || startsWith(github.ref, 'refs/tags/v') }}
-            type=raw,value=staging,enable=${{ github.event_name == 'pull_request' }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -148,58 +147,6 @@ jobs:
             APP_VERSION=${{ inputs.tag || github.ref_name }}
             APP_PR_NUMBER=${{ github.event.pull_request.number }}
             APP_BRANCH=${{ github.head_ref }}
-
-  deploy-staging:
-    needs: build-and-push
-    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-latest
-    concurrency:
-      group: deploy-staging
-      cancel-in-progress: true
-    permissions:
-      contents: read
-
-    steps:
-      - name: Deploy staging
-        uses: appleboy/ssh-action@v1
-        with:
-          host: firth.water.gkhs.net
-          username: alchemistic
-          key: ${{ secrets.FIRTH_SSH_KEY }}
-          script: |
-            set -euo pipefail
-            cd /home/docker/alchemistic-staging
-            timeout 300 docker compose pull || {
-              echo "ERROR: docker compose pull failed or timed out after 300s"
-              exit 1
-            }
-            docker compose up -d || {
-              echo "ERROR: docker compose up -d failed"
-              docker compose ps
-              docker compose logs --tail=50
-              exit 1
-            }
-            for i in $(seq 1 30); do
-              if docker compose exec -T app php artisan --version > /dev/null 2>&1; then
-                echo "Container ready after ${i} attempt(s)"
-                break
-              fi
-              if [ "$i" -eq 30 ]; then
-                echo "ERROR: Container failed to become ready after 30 attempts"
-                echo "--- Final health check output ---"
-                docker compose exec -T app php artisan --version || true
-                docker compose logs --tail=50 app
-                exit 1
-              fi
-              echo "Attempt ${i}/30: container not ready, waiting..."
-              sleep 2
-            done
-            docker compose exec -T app test -d /var/www/html/public/build || {
-              echo "ERROR: /var/www/html/public/build not found in container, aborting asset copy"
-              exit 1
-            }
-            rm -rf public/build && mkdir -p public/build
-            docker compose cp app:/var/www/html/public/build/. public/build/
 
   deploy-production:
     needs: build-and-push
