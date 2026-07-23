@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\OAuth\TokenController;
+use App\Http\Controllers\OAuth\UserInfoController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Http\Controllers\AuthorizationController;
 
@@ -11,3 +12,7 @@ Route::get('/oauth/authorize', [AuthorizationController::class, 'authorize'])
 Route::post('/oauth/token', [TokenController::class, 'issueToken'])
     ->middleware('throttle')
     ->name('passport.token');
+
+Route::get('/oauth/userinfo', [UserInfoController::class, 'show'])
+    ->middleware('auth:api')
+    ->name('oidc.userinfo');
