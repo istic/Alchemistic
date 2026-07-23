@@ -48,6 +48,16 @@ class AppServiceProvider extends ServiceProvider
 
         Passport::defaultScopes(['openid']);
 
+        // This application does not build a consent screen (see the design spec's
+        // "Out of scope" section) — only first-party clients are supported, and
+        // those skip authorization entirely via Client::skipsAuthorization(). This
+        // fallback view only renders for a non-first-party client reaching the
+        // authorize endpoint, which should not happen in normal use.
+        Passport::authorizationView(fn (array $parameters) => response(
+            'Consent is not supported for this client.',
+            200,
+        ));
+
         Event::listen(AccessTokenCreated::class, AttachOidcIdToken::class);
     }
 
