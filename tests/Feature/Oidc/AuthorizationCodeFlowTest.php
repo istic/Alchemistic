@@ -85,3 +85,15 @@ test('a non-first-party client does not skip the consent screen', function () {
     $response->assertOk();
     $response->assertDontSee('id_token');
 });
+
+test('the token endpoint rejects grant types other than authorization_code and refresh_token', function () {
+    $client = app(ClientRepository::class)->createClientCredentialsGrantClient('Machine Client');
+
+    $response = $this->post('/oauth/token', [
+        'grant_type' => 'client_credentials',
+        'client_id' => $client->getKey(),
+        'client_secret' => $client->plainSecret,
+    ]);
+
+    $response->assertStatus(400)->assertJson(['error' => 'unsupported_grant_type']);
+});
