@@ -17,3 +17,9 @@ updates:
     target-branch: "dependabot-updates"
     schedule:
       interval: "daily"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "dependabot-updates"

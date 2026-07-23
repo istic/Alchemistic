@@ -33,6 +33,7 @@ jobs:
         with:
           php-version: '8.4'
           tools: composer:v2
+          extensions: opentelemetry
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -95,6 +96,7 @@ jobs:
         with:
           php-version: '8.4'
           tools: composer:v2
+          extensions: opentelemetry
 
       - name: Install PHP dependencies
         run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
