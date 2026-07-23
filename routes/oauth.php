@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\OAuth\DiscoveryController;
+use App\Http\Controllers\OAuth\JwksController;
 use App\Http\Controllers\OAuth\TokenController;
 use App\Http\Controllers\OAuth\UserInfoController;
 use Illuminate\Support\Facades\Route;
@@ -16,3 +18,7 @@ Route::post('/oauth/token', [TokenController::class, 'issueToken'])
 Route::get('/oauth/userinfo', [UserInfoController::class, 'show'])
     ->middleware('auth:api')
     ->name('oidc.userinfo');
+
+Route::get('/oauth/jwks', JwksController::class)->name('oidc.jwks');
+
+Route::get('/.well-known/openid-configuration', DiscoveryController::class)->name('oidc.discovery');
