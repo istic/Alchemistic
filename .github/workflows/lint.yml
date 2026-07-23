@@ -28,6 +28,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ vars.PHP_VERSION }}
+          extensions: opentelemetry
 
       - name: Install Dependencies
         run: |
