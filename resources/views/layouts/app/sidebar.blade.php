@@ -26,7 +26,7 @@
                     {{ __('SFTP') }}
                 </flux:sidebar.item>
             @endif
-                <flux:sitebar.item icon="chart-bar" href="https://analytics.istic.systems">Web Analytics</flux:sitebar.item>
+                <flux:sidebar.item icon="chart-bar" href="https://analytics.istic.systems">Web Analytics</flux:sidebar.item>
             </flux:sidebar.group>
 
             @if (Auth::check() && Auth::user()->hasPermission('admin'))
