@@ -90,6 +90,28 @@ test('a non-first-party client does not skip the consent screen', function () {
     expect($response->headers->get('Location'))->toBeNull();
 });
 
+test('the token endpoint is reachable by session-less clients despite living under the web middleware group', function () {
+    // CSRF verification is auto-bypassed while running tests (see
+    // VerifyCsrfToken::runningUnitTests()), which is exactly what let this
+    // regress silently before: routes/oauth.php is required from
+    // routes/web.php, so /oauth/token inherits the `web` group (including
+    // CSRF) even though real clients never have a Laravel session/CSRF
+    // token. Force the app out of the "testing" env so CSRF actually runs,
+    // proving the bootstrap/app.php exemption for oauth/* holds.
+    app()->instance('env', 'production');
+
+    $client = app(ClientRepository::class)->createClientCredentialsGrantClient('Machine Client');
+
+    $response = $this->post('/oauth/token', [
+        'grant_type' => 'client_credentials',
+        'client_id' => $client->getKey(),
+        'client_secret' => $client->plainSecret,
+    ]);
+
+    // Rejected for an unsupported grant type, not a 419 CSRF failure.
+    $response->assertStatus(400)->assertJson(['error' => 'unsupported_grant_type']);
+});
+
 test('the token endpoint rejects grant types other than authorization_code and refresh_token', function () {
     $client = app(ClientRepository::class)->createClientCredentialsGrantClient('Machine Client');
 

@@ -12,7 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // /oauth/* routes live in routes/oauth.php, required from routes/web.php,
+        // so they inherit the `web` group (session, CSRF) even though most of
+        // them are hit by external, session-less OAuth/OIDC clients rather than
+        // browsers with a CSRF token.
+        $middleware->validateCsrfTokens(except: [
+            'oauth/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
