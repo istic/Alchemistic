@@ -19,13 +19,15 @@
                 </flux:sidebar.item>
             </flux:sidebar.group>
 
-            @if (Auth::check() && (Auth::user()->hasPermission('sftp_access') || Auth::user()->hasPermission('admin')))
+            
             <flux:sidebar.group :heading="__('Services')" class="grid">
+            @if (Auth::check() && (Auth::user()->hasPermission('sftp_access') || Auth::user()->hasPermission('admin')))
                 <flux:sidebar.item icon="server" :href="route('sftp.password')" :current="request()->routeIs('sftp.password')" wire:navigate>
                     {{ __('SFTP') }}
                 </flux:sidebar.item>
-            </flux:sidebar.group>
             @endif
+                <flux:sitebar.item icon="chart-bar" href="https://analytics.istic.systems">Web Analytics</flux:sitebar.item>
+            </flux:sidebar.group>
 
             @if (Auth::check() && Auth::user()->hasPermission('admin'))
             <flux:sidebar.group :heading="__('Admin')" class="grid">
@@ -37,16 +39,6 @@
         </flux:sidebar.nav>
 
         <flux:spacer />
-
-        <flux:sidebar.nav>
-            <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                {{ __('Repository') }}
-            </flux:sidebar.item>
-
-            <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                {{ __('Documentation') }}
-            </flux:sidebar.item>
-        </flux:sidebar.nav>
 
         @if (Auth::check())
         <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
