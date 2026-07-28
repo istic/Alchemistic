@@ -9,6 +9,14 @@ fi
 echo "[entrypoint] Creating storage directories..."
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs storage/app/public
 
+if [ ! -f storage/oauth-private.key ] || [ ! -f storage/oauth-public.key ]; then
+    echo "[entrypoint] Generating Passport encryption keys..."
+    php artisan passport:keys --force || {
+        echo "[entrypoint] ERROR: php artisan passport:keys failed" >&2
+        exit 1
+    }
+fi
+
 php artisan config:cache || {
     echo "[entrypoint] ERROR: php artisan config:cache failed" >&2
     exit 1
