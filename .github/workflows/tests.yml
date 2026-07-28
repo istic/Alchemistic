@@ -13,9 +13,10 @@ on:
 
 jobs:
   tests:
-    uses: istic/shared-workflows/.github/workflows/laravel-tests.yml@main
+    uses: istic/shared-workflows/.github/workflows/laravel-tests.yml@feature/laravel-tests-setup-command
     with:
       php_versions: '["8.4", "8.5"]'
       node_version: "22"
-      test_command: "php artisan passport:keys --force && vendor/bin/pest"
+      test_command: "vendor/bin/pest"
+      setup_command: "php artisan passport:keys --force"
     secrets: inherit # pragma: allowlist secret
