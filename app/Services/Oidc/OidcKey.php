@@ -3,12 +3,19 @@
 namespace App\Services\Oidc;
 
 use Laravel\Passport\Passport;
+use RuntimeException;
 
 class OidcKey
 {
     public static function publicKeyPem(): string
     {
-        return file_get_contents(Passport::keyPath('oauth-public.key'));
+        $path = Passport::keyPath('oauth-public.key');
+
+        if (! is_readable($path)) {
+            throw new RuntimeException("OIDC public key not found or unreadable at {$path}. Run `php artisan passport:keys`.");
+        }
+
+        return file_get_contents($path);
     }
 
     public static function kid(): string
@@ -21,7 +28,17 @@ class OidcKey
      */
     public static function jwk(): array
     {
-        $details = openssl_pkey_get_details(openssl_pkey_get_public(self::publicKeyPem()));
+        $publicKey = openssl_pkey_get_public(self::publicKeyPem());
+
+        if ($publicKey === false) {
+            throw new RuntimeException('OIDC public key at '.Passport::keyPath('oauth-public.key').' could not be parsed as a valid RSA key.');
+        }
+
+        $details = openssl_pkey_get_details($publicKey);
+
+        if ($details === false || ! isset($details['rsa']['n'], $details['rsa']['e'])) {
+            throw new RuntimeException('OIDC public key does not contain the expected RSA key details.');
+        }
 
         return [
             'kty' => 'RSA',

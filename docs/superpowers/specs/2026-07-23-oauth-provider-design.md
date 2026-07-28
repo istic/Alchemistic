@@ -87,6 +87,8 @@ Both the `id_token` and the `/oauth/userinfo` response include:
 - `iss` — Alchemistic's issuer URL
 - `aud` — client id (id_token only)
 - `exp`, `iat`
+- `nonce` — echoed back from the `/oauth/authorize` request's `nonce` query
+  parameter, when supplied (id_token only)
 - `name`
 - `email`
 - `email_verified`

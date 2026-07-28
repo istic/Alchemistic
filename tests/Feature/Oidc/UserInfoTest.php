@@ -29,3 +29,23 @@ test('userinfo rejects a token without the openid scope', function () {
 
     $this->getJson('/oauth/userinfo')->assertStatus(403);
 });
+
+test('userinfo rejects a garbage bearer token', function () {
+    $this->withHeader('Authorization', 'Bearer not-a-real-token')
+        ->getJson('/oauth/userinfo')
+        ->assertStatus(401);
+});
+
+test('userinfo rejects requests with no bearer token at all', function () {
+    $this->getJson('/oauth/userinfo')->assertStatus(401);
+});
+
+test('userinfo reports an empty permissions array for a user with none', function () {
+    $user = User::factory()->create();
+
+    Passport::actingAs($user, ['openid']);
+
+    $response = $this->getJson('/oauth/userinfo');
+
+    $response->assertOk()->assertJson(['permissions' => []]);
+});

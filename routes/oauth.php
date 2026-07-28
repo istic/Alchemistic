@@ -15,7 +15,7 @@ Route::post('/oauth/token', [TokenController::class, 'issueToken'])
     ->middleware('throttle')
     ->name('passport.token');
 
-Route::get('/oauth/userinfo', [UserInfoController::class, 'show'])
+Route::match(['get', 'post'], '/oauth/userinfo', [UserInfoController::class, 'show'])
     ->middleware('auth:api')
     ->name('oidc.userinfo');
 

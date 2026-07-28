@@ -11,6 +11,7 @@ class UserInfoController
     {
         $user = $request->user();
 
+        abort_unless($user !== null, 401);
         abort_unless($user->tokenCan('openid'), 403);
 
         return response()->json([
