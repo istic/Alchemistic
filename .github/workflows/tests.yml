@@ -17,5 +17,5 @@ jobs:
     with:
       php_versions: '["8.4", "8.5"]'
       node_version: "22"
-      test_command: "vendor/bin/pest"
+      test_command: "php artisan passport:keys --force && vendor/bin/pest"
     secrets: inherit # pragma: allowlist secret
