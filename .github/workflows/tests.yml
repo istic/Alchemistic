@@ -13,7 +13,7 @@ on:
 
 jobs:
   tests:
-    uses: istic/shared-workflows/.github/workflows/laravel-tests.yml@feature/laravel-tests-setup-command
+    uses: istic/shared-workflows/.github/workflows/laravel-tests.yml@main
     with:
       php_versions: '["8.4", "8.5"]'
       node_version: "22"
