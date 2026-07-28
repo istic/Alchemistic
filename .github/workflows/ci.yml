@@ -72,6 +72,9 @@ jobs:
       - name: Build assets
         run: npm run build
 
+      - name: Generate Passport keys
+        run: php artisan passport:keys --force
+
       - name: Run tests
         run: vendor/bin/pest
 
