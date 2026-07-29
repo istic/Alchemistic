@@ -106,7 +106,7 @@ fi
 
 # If in Docker, wait for the main app to be ready
 if [[ "$IN_DOCKER" == true ]]; then
-    echo "[ngrok] Waiting for application to be ready..."
+    echo "[ngrok] Waiting for application to be ready on http://application:${APP_PORT}..."
     until curl -sf "http://application:${APP_PORT}" > /dev/null 2>&1; do
         echo "[ngrok] Waiting for app..."
         sleep 2

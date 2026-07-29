@@ -1,24 +1,11 @@
 name: istic-manage
 services:
-  laravelbase:
-    build:
-        context: ./vendor/laravel/sail/runtimes/8.4
-        dockerfile: Dockerfile
-        args:
-            WWWGROUP: '${WWWGROUP}'
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    environment:
-      WWWUSER: "${WWWUSER}"
-      LARAVEL_SAIL: 1
-    volumes:
-      - ".:/var/www/html"
-    networks:
-      - sail
-    deploy:
-        replicas: 0
   application:
-    image: istic-manage-laravelbase
+    build:
+      context: ./docker/development
+      dockerfile: Dockerfile
+      args:
+        WWWGROUP: "${WWWGROUP}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
@@ -41,47 +28,47 @@ services:
       - redis
       - mailpit
 
-#   reverb:
-#     image: istic-manage-laravelbase
-#     command: php artisan reverb:start --host=0.0.0.0 --port=8080
-#     working_dir: /var/www/html
-#     ports:
-#       - "${REVERB_SERVER_PORT:-8080}:8080"
-#     environment:
-#       WWWUSER: "${WWWUSER}"
-#       LARAVEL_SAIL: 1
-#       REDIS_HOST: redis
-#     volumes:
-#       - ".:/var/www/html"
-#     networks:
-#       - sail
-#     depends_on:
-#       redis:
-#         condition: service_healthy
-#     restart: unless-stopped
+  #   reverb:
+  #     image: istic-manage-laravelbase
+  #     command: php artisan reverb:start --host=0.0.0.0 --port=8080
+  #     working_dir: /var/www/html
+  #     ports:
+  #       - "${REVERB_SERVER_PORT:-8080}:8080"
+  #     environment:
+  #       WWWUSER: "${WWWUSER}"
+  #       LARAVEL_SAIL: 1
+  #       REDIS_HOST: redis
+  #     volumes:
+  #       - ".:/var/www/html"
+  #     networks:
+  #       - sail
+  #     depends_on:
+  #       redis:
+  #         condition: service_healthy
+  #     restart: unless-stopped
 
-#   horizon:
-#     image: istic-manage-laravelbase
-#     command: php artisan horizon
-#     working_dir: /var/www/html
-#     environment:
-#       WWWUSER: "${WWWUSER}"
-#       LARAVEL_SAIL: 1
-#       REDIS_HOST: redis
-#       REVERB_APP_ID: "${REVERB_APP_ID}"
-#       REVERB_APP_KEY: "${REVERB_APP_KEY}"
-#       REVERB_APP_SECRET: "${REVERB_APP_SECRET}"
-#       REVERB_HOST: reverb
-#       REVERB_PORT: "${REVERB_SERVER_PORT:-8080}"
-#       REVERB_SCHEME: http
-#     volumes:
-#       - ".:/var/www/html"
-#     networks:
-#       - sail
-#     depends_on:
-#       redis:
-#         condition: service_healthy
-#     restart: unless-stopped
+  #   horizon:
+  #     image: istic-manage-laravelbase
+  #     command: php artisan horizon
+  #     working_dir: /var/www/html
+  #     environment:
+  #       WWWUSER: "${WWWUSER}"
+  #       LARAVEL_SAIL: 1
+  #       REDIS_HOST: redis
+  #       REVERB_APP_ID: "${REVERB_APP_ID}"
+  #       REVERB_APP_KEY: "${REVERB_APP_KEY}"
+  #       REVERB_APP_SECRET: "${REVERB_APP_SECRET}"
+  #       REVERB_HOST: reverb
+  #       REVERB_PORT: "${REVERB_SERVER_PORT:-8080}"
+  #       REVERB_SCHEME: http
+  #     volumes:
+  #       - ".:/var/www/html"
+  #     networks:
+  #       - sail
+  #     depends_on:
+  #       redis:
+  #         condition: service_healthy
+  #     restart: unless-stopped
 
   redis:
     healthcheck:
@@ -129,8 +116,6 @@ services:
       - sail
     depends_on:
       - application
-    extra_hosts:
-      - "application:host-gateway"
 
 networks:
   sail:
