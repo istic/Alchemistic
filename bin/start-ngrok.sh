@@ -96,6 +96,20 @@ function update_env_with_ngrok_urls() {
     done < "${WORKDIR}/.env.ngrok"
 
 
+    # Update public/hot if needed
+    if grep -q "^NGROK_DELTA_VITE_URL=" "${WORKDIR}/.env.ngrok"; then
+        local VITE_URL
+        VITE_URL=$(grep "^NGROK_DELTA_VITE_URL=" "${WORKDIR}/.env.ngrok" | cut -d'=' -f2)
+        if [[ -f "${WORKDIR}/public/hot" ]]; then
+            # The .env edits above trigger Vite's dev-server restart (it watches .env),
+            # which rewrites public/hot back to localhost. Wait for that restart to
+            # settle before writing the tunnel URL, so ours is the value left standing.
+            sleep 3
+            echo "https://${VITE_URL}" > "${WORKDIR}/public/hot"
+            echo "Updated public/hot with Vite URL"
+        fi
+    fi
+
     rm -f "${WORKDIR}/.env.ngrok"
     echo "Environment update complete!"
 }
@@ -118,6 +132,7 @@ fi
 echo "[ngrok] Generating ngrok configuration..."
 cd "${WORKDIR}"
 export LOCAL_APP_URL="http://application:${APP_PORT}"
+export LOCAL_VITE_URL="http://application:${VITE_PORT:-5173}"
 envsubst < ngrok.example.yaml > ngrok.generated.yaml
 
 # Start ngrok in background if in Docker, foreground otherwise

@@ -19,5 +19,6 @@ export default defineConfig({
         hmr: {
             host: "localhost",
         },
+        allowedHosts: [".ngrok-free.app", ".ngrok.app", ".ngrok.io"],
     },
 });

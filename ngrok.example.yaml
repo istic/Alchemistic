@@ -11,3 +11,8 @@ endpoints:
     url: ${NGROK_WS_URL}
     upstream:
       url: http://reverb:8080
+
+  - name: delta_vite
+    url: ${NGROK_VITE_URL}
+    upstream:
+      url: ${LOCAL_VITE_URL}
