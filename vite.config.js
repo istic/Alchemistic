@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), "");
-    const ngrokViteHost = env.NGROK_DELTA_VITE_URL;
+    const tunnelViteHost = env.CLOUDFLARE_DELTA_VITE_URL;
 
     return {
         plugins: [
@@ -20,11 +20,11 @@ export default defineConfig(({ mode }) => {
             headers: {
                 "Access-Control-Allow-Origin": "*",
             },
-            origin: ngrokViteHost ? `https://${ngrokViteHost}` : undefined,
-            hmr: ngrokViteHost
-                ? { host: ngrokViteHost, protocol: "wss", clientPort: 443 }
+            origin: tunnelViteHost ? `https://${tunnelViteHost}` : undefined,
+            hmr: tunnelViteHost
+                ? { host: tunnelViteHost, protocol: "wss", clientPort: 443 }
                 : { host: "localhost" },
-            allowedHosts: [".ngrok-free.app", ".ngrok.app", ".ngrok.io"],
+            allowedHosts: [".trycloudflare.com"],
         },
     };
 });

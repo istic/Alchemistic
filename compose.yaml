@@ -95,24 +95,17 @@ services:
       - "${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
     networks:
       - sail
-  ngrok:
+  cloudflared:
     build:
-      context: "./docker/ngrok"
+      context: "./docker/cloudflared"
       dockerfile: Dockerfile
-    image: "sail-ngrok/app"
-    entrypoint: ["/var/www/html/bin/start-ngrok.sh"]
-    ports:
-      - "4040:4040"
+    image: "sail-cloudflared/app"
+    entrypoint: ["/var/www/html/bin/start-cloudflared.sh"]
     environment:
       DOCKER: "true"
-      NGROK_AUTHTOKEN: "${NGROK_AUTHTOKEN}"
-      NGROK_URL: "${NGROK_URL}"
-      NGROK_WS_URL: "${NGROK_WS_URL}"
-      NGROK_VITE_URL: "${NGROK_VITE_URL}"
       REVERB_SERVER_PORT: "${REVERB_SERVER_PORT:-8080}"
     volumes:
       - ".:/var/www/html"
-      - "./ngrok.example.yaml:/var/www/html/ngrok.example.yaml"
     networks:
       - sail
     depends_on:
