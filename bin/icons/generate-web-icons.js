@@ -9,7 +9,7 @@ const CANVAS_SIZE = 1200;
 const FAVICON_SIZES = [16, 32, 48, 64, 128, 256, 512];
 const WHITE = '#FFFFFF';
 
-function extractGlyphMarkup(svgMarkup) {
+export function extractGlyphMarkup(svgMarkup) {
     const match = svgMarkup.match(/<svg\b[^>]*>([\s\S]*)<\/svg>/i);
 
     if (!match) {
@@ -19,7 +19,7 @@ function extractGlyphMarkup(svgMarkup) {
     return match[1].trim();
 }
 
-function buildCanvasSvg(glyphMarkup, backgroundColor) {
+export function buildCanvasSvg(glyphMarkup, backgroundColor) {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <svg viewBox="0 0 ${CANVAS_SIZE} ${CANVAS_SIZE}" xmlns="http://www.w3.org/2000/svg">
   <rect x="0" y="0" width="${CANVAS_SIZE}" height="${CANVAS_SIZE}" fill="${backgroundColor}"/>

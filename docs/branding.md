@@ -4,10 +4,9 @@ Brand color: #FFD65B
 Icon Origin: [The Noun Project - Energy](https://thenounproject.com/icon/energy-5215977/)
 Brand Icon: resources/branding/alchemistic.svg
 
-Apple Icon Composer file: (Not generated)
-
-* Light mode icons should be brand icon on brand color.
-* Dark mode icons should be brand icon recolored to brand color on black background.
+Apple Icon Composer file: (none — this app has no `resources/branding/bloom.icon` bundle, so
+`apple-touch-icon.png` falls back to a flat render of the brand glyph on the background color
+instead of the squircle/gradient/specular composer treatment.)
 
 ## Icon source of truth
 
@@ -25,25 +24,21 @@ These files must be generated from the clean SVG source, not from the Apple touc
 * resources/icons/favicon.ico
 * resources/icons/web-app-manifest-192x192.png
 * resources/icons/web-app-manifest-512x512.png
-* resources/icons/alchemistic-standard.svg
-* resources/icons/alchemistic-standard.png
-* resources/icons/alchemistic-on-white.png
+* resources/icons/logo-standard.svg
+* resources/icons/logo-standard.png
+* resources/icons/logo-on-white.png
 
 ### Regeneration command
 
-Use the helper script to regenerate all non-Apple icons from a clean SVG and a background color:
-
-```bash
-bin/regen-icons.sh \
-	--svg resources/branding/alchemistic.svg \
-	--bg '#FFD65B'
-```
+Icons are regenerated automatically by the Vite plugin (`bin/icons/vite-plugin.js`) on every
+`npm run dev` or `npm run build`, reading `resources/branding/icon-config.json` for the glyph
+source and background color. There's no separate script to invoke manually.
 
 
 ### Color treatment rules
 
-* Standard favicon/app icons: brand color background with white glyph.
-* On-white variant: white background with brand color glyph.
+* Standard favicon/app icons: brand color background with the glyph as drawn in the source SVG (currently black).
+* On-white variant: white background with the same glyph, unchanged.
 
 ## Core palette - these aren't used automatically yet
 

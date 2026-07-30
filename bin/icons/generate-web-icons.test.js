@@ -31,8 +31,8 @@ describe('generateWebIcons', () => {
 
         const expectations = {
             'favicon-96x96.png': { width: 96, height: 96 },
-            'bloom-standard.png': { width: 1200, height: 1200 },
-            'bloom-on-white.png': { width: 1200, height: 1200 },
+            'logo-standard.png': { width: 1200, height: 1200 },
+            'logo-on-white.png': { width: 1200, height: 1200 },
             'web-app-manifest-192x192.png': { width: 192, height: 192 },
             'web-app-manifest-512x512.png': { width: 512, height: 512 },
         };
@@ -50,7 +50,7 @@ describe('generateWebIcons', () => {
         await generateWebIcons(CONFIG, dir);
 
         const favicon = await fs.readFile(path.join(dir, 'favicon.svg'), 'utf-8');
-        const standard = await fs.readFile(path.join(dir, 'bloom-standard.svg'), 'utf-8');
+        const standard = await fs.readFile(path.join(dir, 'logo-standard.svg'), 'utf-8');
 
         expect(favicon).toBe(standard);
         expect(favicon).toContain('fill="#6A2AAC"');
@@ -85,7 +85,7 @@ describe('generateWebIcons', () => {
 
         await generateWebIcons(CONFIG, dir);
 
-        const { data } = await sharp(path.join(dir, 'bloom-on-white.png'))
+        const { data } = await sharp(path.join(dir, 'logo-on-white.png'))
             .raw()
             .toBuffer({ resolveWithObject: true });
 

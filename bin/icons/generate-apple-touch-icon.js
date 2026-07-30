@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import { compensateForAppleRender, hexToDisplayP3, p3StringToAppleRgb } from './colors.js';
+import { buildCanvasSvg, extractGlyphMarkup } from './generate-web-icons.js';
 import { generateSquirclePath } from './squircle.js';
 
 const ICON_DIR = 'resources/branding/bloom.icon';
@@ -164,14 +165,16 @@ async function cornerSpecularLayer() {
 }
 
 async function generateFlatIcon(config, outputDir = DEFAULT_OUTPUT_DIR) {
-    // Generate a flat, non-squircle icon for use in the web manifest and as a fallback.
-    const compensatedHex = compensateForAppleRender(config.backgroundColor);
-    const rgb = p3StringToAppleRgb(hexToDisplayP3(compensatedHex));
+    // No Apple Icon Composer bundle for this app: fall back to the brand glyph
+    // flat on the background color, skipping the squircle/gradient/specular treatment.
+    const glyphSource = await fs.readFile(config.glyph, 'utf-8');
+    const glyphMarkup = extractGlyphMarkup(glyphSource);
+    const svg = buildCanvasSvg(glyphMarkup, config.backgroundColor);
 
     await fs.mkdir(outputDir, { recursive: true });
-    await sharp({
-        create: { width: SIZE, height: SIZE, channels: 4, background: { r: rgb[0], g: rgb[1], b: rgb[2], alpha: 1 } },
-    })
+    await sharp(Buffer.from(svg))
+        .resize(SIZE, SIZE)
+        .png()
         .toFile(path.join(outputDir, 'apple-touch-icon.png'));
 }
 
