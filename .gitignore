@@ -23,3 +23,6 @@ yarn-error.log
 /.vscode
 /.zed
 /docker/cloudflared/data
+/.claude/settings.local.json
+/resources/icons
+*.pid
