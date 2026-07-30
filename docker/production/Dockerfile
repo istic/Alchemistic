@@ -1,5 +1,9 @@
 FROM php:8.4-fpm-alpine
 
+LABEL maintainer="Aquarion <nicholas@istic.net>"
+LABEL description="Alchemistic PHP-FPM Docker image for production"
+## Note if you change this, you should mirror those changes in the development Dockerfile as well
+
 COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/bin/install-php-extensions
 
 RUN docker-php-ext-install pdo_mysql opcache bcmath \

@@ -23,4 +23,4 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
-ngrok.generated.yaml
+/docker/cloudflared/data

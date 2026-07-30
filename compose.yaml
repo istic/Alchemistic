@@ -1,24 +1,15 @@
+##### Note: This is development-only configuration. Production uses docker/production to build an image that is deployed to Firth
+##### That docker configuration is managed by the laravel_apps Ansible role in aquarion/autopelago
+##### any changes you make here should be reflected in docker/production/Dockerfile and docker/production/supervisord.conf as needed.
+
 name: istic-manage
 services:
-  laravelbase:
-    build:
-        context: ./vendor/laravel/sail/runtimes/8.4
-        dockerfile: Dockerfile
-        args:
-            WWWGROUP: '${WWWGROUP}'
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    environment:
-      WWWUSER: "${WWWUSER}"
-      LARAVEL_SAIL: 1
-    volumes:
-      - ".:/var/www/html"
-    networks:
-      - sail
-    deploy:
-        replicas: 0
   application:
-    image: istic-manage-laravelbase
+    build:
+      context: ./docker/development
+      dockerfile: Dockerfile
+      args:
+        WWWGROUP: "${WWWGROUP}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
@@ -41,47 +32,47 @@ services:
       - redis
       - mailpit
 
-#   reverb:
-#     image: istic-manage-laravelbase
-#     command: php artisan reverb:start --host=0.0.0.0 --port=8080
-#     working_dir: /var/www/html
-#     ports:
-#       - "${REVERB_SERVER_PORT:-8080}:8080"
-#     environment:
-#       WWWUSER: "${WWWUSER}"
-#       LARAVEL_SAIL: 1
-#       REDIS_HOST: redis
-#     volumes:
-#       - ".:/var/www/html"
-#     networks:
-#       - sail
-#     depends_on:
-#       redis:
-#         condition: service_healthy
-#     restart: unless-stopped
+  #   reverb:
+  #     image: istic-manage-laravelbase
+  #     command: php artisan reverb:start --host=0.0.0.0 --port=8080
+  #     working_dir: /var/www/html
+  #     ports:
+  #       - "${REVERB_SERVER_PORT:-8080}:8080"
+  #     environment:
+  #       WWWUSER: "${WWWUSER}"
+  #       LARAVEL_SAIL: 1
+  #       REDIS_HOST: redis
+  #     volumes:
+  #       - ".:/var/www/html"
+  #     networks:
+  #       - sail
+  #     depends_on:
+  #       redis:
+  #         condition: service_healthy
+  #     restart: unless-stopped
 
-#   horizon:
-#     image: istic-manage-laravelbase
-#     command: php artisan horizon
-#     working_dir: /var/www/html
-#     environment:
-#       WWWUSER: "${WWWUSER}"
-#       LARAVEL_SAIL: 1
-#       REDIS_HOST: redis
-#       REVERB_APP_ID: "${REVERB_APP_ID}"
-#       REVERB_APP_KEY: "${REVERB_APP_KEY}"
-#       REVERB_APP_SECRET: "${REVERB_APP_SECRET}"
-#       REVERB_HOST: reverb
-#       REVERB_PORT: "${REVERB_SERVER_PORT:-8080}"
-#       REVERB_SCHEME: http
-#     volumes:
-#       - ".:/var/www/html"
-#     networks:
-#       - sail
-#     depends_on:
-#       redis:
-#         condition: service_healthy
-#     restart: unless-stopped
+  #   horizon:
+  #     image: istic-manage-laravelbase
+  #     command: php artisan horizon
+  #     working_dir: /var/www/html
+  #     environment:
+  #       WWWUSER: "${WWWUSER}"
+  #       LARAVEL_SAIL: 1
+  #       REDIS_HOST: redis
+  #       REVERB_APP_ID: "${REVERB_APP_ID}"
+  #       REVERB_APP_KEY: "${REVERB_APP_KEY}"
+  #       REVERB_APP_SECRET: "${REVERB_APP_SECRET}"
+  #       REVERB_HOST: reverb
+  #       REVERB_PORT: "${REVERB_SERVER_PORT:-8080}"
+  #       REVERB_SCHEME: http
+  #     volumes:
+  #       - ".:/var/www/html"
+  #     networks:
+  #       - sail
+  #     depends_on:
+  #       redis:
+  #         condition: service_healthy
+  #     restart: unless-stopped
 
   redis:
     healthcheck:
@@ -108,29 +99,21 @@ services:
       - "${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
     networks:
       - sail
-  ngrok:
+  cloudflared:
     build:
-      context: "./docker/ngrok"
+      context: "./docker/cloudflared"
       dockerfile: Dockerfile
-    image: "sail-ngrok/app"
-    entrypoint: ["/var/www/html/bin/start-ngrok.sh"]
-    ports:
-      - "4040:4040"
+    image: "sail-cloudflared/app"
     environment:
       DOCKER: "true"
-      NGROK_AUTHTOKEN: "${NGROK_AUTHTOKEN}"
-      NGROK_URL: "${NGROK_URL}"
-      NGROK_WS_URL: "${NGROK_WS_URL}"
       REVERB_SERVER_PORT: "${REVERB_SERVER_PORT:-8080}"
     volumes:
       - ".:/var/www/html"
-      - "./ngrok.example.yaml:/var/www/html/ngrok.example.yaml"
+      - "./docker/cloudflared/data:/root/.cloudflared"
     networks:
       - sail
     depends_on:
       - application
-    extra_hosts:
-      - "application:host-gateway"
 
 networks:
   sail:
