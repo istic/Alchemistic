@@ -66,14 +66,14 @@ async function glyphLayer(group, layer) {
     const imagePath = path.join(ICON_DIR, 'Assets', layer['image-name']);
 
     if (!(await fileExists(imagePath))) {
-        return null;
+        throw new Error(`glyphLayer: missing icon asset ${imagePath} referenced by icon.json`);
     }
 
     const originalSvg = await fs.readFile(imagePath, 'utf-8');
     const pathMatch = originalSvg.match(/<path d="([^"]+)"/);
 
     if (!pathMatch) {
-        return null;
+        throw new Error(`glyphLayer: no <path d="..."> found in ${imagePath}`);
     }
 
     const scale = layer.position?.scale || 1.0;
@@ -85,7 +85,7 @@ async function glyphLayer(group, layer) {
     const layerOffset = Math.round((SIZE - layerSize) / 2);
 
     // Apple's translucency is a frosted-glass blend, not simple fill-opacity.
-    // The interior petal pixels in the reference output match ~0.70 opacity for
+    // The interior petal pixels in the reference output match ~0.675 opacity for
     // translucency=0.5; specular highlights then push bright edges toward white.
     const translucency = group.translucency?.enabled ? (group.translucency.value ?? 0.5) : 1.0;
     const layerOpacity = Math.min(1.0, 0.4 + translucency * 0.55);
@@ -190,11 +190,7 @@ export async function generateFromIconFile(config, outputDir = DEFAULT_OUTPUT_DI
 
     for (const group of iconData.groups || []) {
         for (const layer of group.layers || []) {
-            const composite = await glyphLayer(group, layer);
-
-            if (composite) {
-                composites.push(composite);
-            }
+            composites.push(await glyphLayer(group, layer));
         }
     }
 
