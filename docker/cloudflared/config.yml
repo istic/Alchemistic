@@ -1,0 +1,11 @@
+tunnel: a8af72cd-000d-4afe-963c-dfe49d6e2cc4
+credentials-file: /root/.cloudflared/a8af72cd-000d-4afe-963c-dfe49d6e2cc4.json
+
+ingress:
+  - hostname: alchem.istic.dev
+    service: http://application:80
+  - hostname: vite-alchem.istic.dev
+    service: http://application:5173
+  - hostname: ws-alchem.istic.dev
+    service: http://reverb:8080
+  - service: http_status:404

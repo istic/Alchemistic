@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), "");
-    const tunnelViteHost = env.CLOUDFLARE_DELTA_VITE_URL;
+    const tunnelViteHost = env.CLOUDFLARE_VITE_HOSTNAME;
 
     return {
         plugins: [
