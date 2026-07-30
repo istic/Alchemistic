@@ -8,4 +8,4 @@ COPY --from=cloudflared /usr/local/bin/cloudflared /usr/local/bin/cloudflared
 
 WORKDIR /var/www/html
 
-ENTRYPOINT ["/var/www/html/bin/start-cloudflared.sh"]
+ENTRYPOINT ["/var/www/html/docker/cloudflared/entrypoint.sh"]
