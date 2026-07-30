@@ -14,8 +14,6 @@ RUN apk add --no-cache supervisor nodejs npm shadow \
 ARG WWWGROUP=1000
 RUN groupmod -g "${WWWGROUP}" www-data
 
-# COPY docker/production/php-opcache.ini /usr/local/etc/php/conf.d/opcache.ini
-
 WORKDIR /var/www/html
 
 ARG APP_VERSION=dev

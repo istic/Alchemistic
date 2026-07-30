@@ -1,8 +1,8 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # Detect if running in Docker
-if [[ -f /.dockerenv ]] || [[ -n "${DOCKER}" ]]; then
+if [[ -f /.dockerenv ]] || [[ -n "${DOCKER:-}" ]]; then
     IN_DOCKER=true
     WORKDIR="/var/www/html"
     echo "[cloudflared] Running in Docker container"
@@ -15,17 +15,29 @@ fi
 # Load environment variables
 if [[ -f "${WORKDIR}/.env" ]]; then
     source "${WORKDIR}/.env"
+else
+    echo "[cloudflared] WARNING: ${WORKDIR}/.env not found; using default APP_PORT=80"
 fi
 
-if [[ -z "$APP_PORT" ]]; then
+if [[ -z "${APP_PORT:-}" ]]; then
     export APP_PORT=80
 fi
 
 # If in Docker, wait for the main app to be ready
 if [[ "$IN_DOCKER" == true ]]; then
     echo "[cloudflared] Waiting for application to be ready on http://application:${APP_PORT}..."
-    until curl -sf "http://application:${APP_PORT}" > /dev/null 2>&1; do
-        echo "[cloudflared] Waiting for app..."
+    MAX_ATTEMPTS=60 # ~2 minutes at 2s intervals
+    attempt=0
+    until curl -sS -f "http://application:${APP_PORT}" > /tmp/cloudflared-health.log 2>&1; do
+        attempt=$((attempt + 1))
+        if [[ "$attempt" -ge "$MAX_ATTEMPTS" ]]; then
+            echo "[cloudflared] ERROR: application did not become ready after ${MAX_ATTEMPTS} attempts." >&2
+            echo "[cloudflared] Last curl output:" >&2
+            cat /tmp/cloudflared-health.log >&2
+            echo "[cloudflared] Check 'docker compose logs application' for the root cause." >&2
+            exit 1
+        fi
+        echo "[cloudflared] Waiting for app... (attempt ${attempt}/${MAX_ATTEMPTS})"
         sleep 2
     done
     echo "[cloudflared] App is ready!"

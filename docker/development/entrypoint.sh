@@ -1,11 +1,14 @@
 #!/bin/sh
-set -e
+set -eu
 
 echo "[entrypoint] Starting entrypoint script..."
 
-if [ -n "${WWWUSER}" ] && [ "${WWWUSER}" != "$(id -u www-data)" ]; then
+if [ -n "${WWWUSER:-}" ] && [ "${WWWUSER}" != "$(id -u www-data)" ]; then
     echo "[entrypoint] Remapping www-data user to WWWUSER=${WWWUSER}..."
-    usermod -u "${WWWUSER}" www-data
+    usermod -u "${WWWUSER}" www-data || {
+        echo "[entrypoint] ERROR: failed to remap www-data to WWWUSER=${WWWUSER}" >&2
+        exit 1
+    }
 fi
 
 if [ ! -f .env ]; then
@@ -14,7 +17,7 @@ if [ ! -f .env ]; then
 fi
 . .env
 
-if [ -z "${APP_KEY}" ]; then
+if [ -z "${APP_KEY:-}" ]; then
     echo "[entrypoint] ERROR: APP_KEY is not set. Set it in your environment." >&2
     exit 1
 fi
