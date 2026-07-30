@@ -12,23 +12,15 @@ else
     echo "[cloudflared] Running standalone"
 fi
 
-# Load environment variables
-if [[ -f "${WORKDIR}/.env" ]]; then
-    source "${WORKDIR}/.env"
-else
-    echo "[cloudflared] WARNING: ${WORKDIR}/.env not found; using default APP_PORT=80"
-fi
-
-if [[ -z "${APP_PORT:-}" ]]; then
-    export APP_PORT=80
-fi
-
-# If in Docker, wait for the main app to be ready
+# If in Docker, wait for the main app to be ready. The application container
+# always listens on port 80 internally (see compose.yaml's "${APP_PORT:-80}:80"
+# mapping and docker/cloudflared/config.yml's http://application:80 origin) —
+# APP_PORT only remaps the host-side port, so it must not be used here.
 if [[ "$IN_DOCKER" == true ]]; then
-    echo "[cloudflared] Waiting for application to be ready on http://application:${APP_PORT}..."
+    echo "[cloudflared] Waiting for application to be ready on http://application:80..."
     MAX_ATTEMPTS=60 # ~2 minutes at 2s intervals
     attempt=0
-    until curl -sS -f "http://application:${APP_PORT}" > /tmp/cloudflared-health.log 2>&1; do
+    until curl -sS -f "http://application:80" > /tmp/cloudflared-health.log 2>&1; do
         attempt=$((attempt + 1))
         if [[ "$attempt" -ge "$MAX_ATTEMPTS" ]]; then
             echo "[cloudflared] ERROR: application did not become ready after ${MAX_ATTEMPTS} attempts." >&2
