@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import laravel from "laravel-vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
+import { iconGenerationPlugin } from "./bin/icons/vite-plugin";
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), "");
@@ -18,8 +19,20 @@ export default defineConfig(({ mode }) => {
 
     return {
         plugins: [
+            iconGenerationPlugin(),
             laravel({
-                input: ["resources/css/app.css", "resources/js/app.js"],
+                input: [
+                    "resources/css/app.css",
+                    "resources/js/app.js",
+                    "resources/icons/apple-touch-icon.png",
+                    "resources/icons/favicon-96x96.png",
+                    "resources/icons/favicon.ico",
+                    "resources/icons/favicon.svg",
+                    "resources/icons/web-app-manifest-192x192.png",
+                    "resources/icons/web-app-manifest-512x512.png",
+                    "resources/icons/logo-standard.png",
+                    "resources/icons/logo-on-white.png",
+                ],
                 refresh: true,
             }),
             tailwindcss(),
