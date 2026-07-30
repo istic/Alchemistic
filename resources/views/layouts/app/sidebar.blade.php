@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
-
 <head>
     @include('partials.head')
 </head>
@@ -20,22 +19,24 @@
             </flux:sidebar.group>
 
             
-            <flux:sidebar.group :heading="__('Services')" class="grid">
-            @if (Auth::check() && (Auth::user()->hasPermission('sftp_access') || Auth::user()->hasPermission('admin')))
-                <flux:sidebar.item icon="server" :href="route('sftp.password')" :current="request()->routeIs('sftp.password')" wire:navigate>
-                    {{ __('SFTP') }}
-                </flux:sidebar.item>
-            @endif
-                <flux:sidebar.item icon="chart-bar" href="https://analytics.istic.systems">Web Analytics</flux:sidebar.item>
-            </flux:sidebar.group>
+            @if (Auth::check())
+                <flux:sidebar.group :heading="__('Services')" class="grid">
+                    @if ((Auth::user()->hasPermission('sftp_access') || Auth::user()->hasPermission('admin')))
+                        <flux:sidebar.item icon="server" :href="route('sftp.password')" :current="request()->routeIs('sftp.password')" wire:navigate>
+                            {{ __('SFTP') }}
+                        </flux:sidebar.item>
+                    @endif
+                    <flux:sidebar.item icon="chart-bar" href="https://analytics.istic.systems">Web Analytics</flux:sidebar.item>
+                </flux:sidebar.group>
 
-            @if (Auth::check() && Auth::user()->hasPermission('admin'))
-            <flux:sidebar.group :heading="__('Admin')" class="grid">
-                <flux:sidebar.item icon="users" :href="route('admin.users')" :current="request()->routeIs('admin.users')" wire:navigate>
-                    {{ __('Users') }}
-                </flux:sidebar.item>
-            </flux:sidebar.group>
-            @endif
+                @if (Auth::user()->hasPermission('admin'))
+                <flux:sidebar.group :heading="__('Admin')" class="grid">
+                    <flux:sidebar.item icon="users" :href="route('admin.users')" :current="request()->routeIs('admin.users')" wire:navigate>
+                        {{ __('Users') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+                @endif
+            @endif  
         </flux:sidebar.nav>
 
         <flux:spacer />

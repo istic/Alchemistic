@@ -6,7 +6,15 @@
         <heading class="text-2xl font-semibold tracking-tight">
             {{ __('Istic Hosting Dashboard') }}
         </heading>
-        <img class="mt-6 rounded-lg object-cover" src="https://art.istic.net/server-images/firth.jpg" alt="Great Cumbrae Island, United Kingdom" aria-describedby="photo-credit" />
+
+        <div class="hero rounded-xl bg-gradient-to-b from-accent-content/50 to-accent-content/0 p-6 text-center bg-[url('https://art.istic.net/server-images/firth.jpg')] bg-cover bg-center">
+            <p class="text-lg font-medium tracking-tight">
+                {{ __('Welcome to the Istic Hosting Dashboard!') }}
+            </p>
+            <p class="mt-2 text-sm text-muted-foreground">
+                {{ __('Here you can manage your hosting services, view analytics, and access other features.') }}
+            </p>
+        </div>
         <div aria-label="Photo credit" id="photo-credit" class="text-sm text-gray-500">Great Cumbrae Island, United Kingdom, Photo by <a href="https://unsplash.com/@sldoug?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Steve Douglas</a> on <a href="https://unsplash.com/photos/white-sail-boat-on-sea-during-daytime-eZc8zZRK4zw?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a></div>
 
         <div class="grid auto-rows-min gap-4 md:grid-cols-3">
