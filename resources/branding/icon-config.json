@@ -1,0 +1,10 @@
+{
+    "glyph": "resources/branding/alchemistic.svg",
+    "backgroundColor": "#FFD65B",
+    "backgroundColors": {
+        "local": "#CC0000",
+        "development": "#CC0000",
+        "staging": "#CC7700",
+        "production": "#FFD65B"
+    }
+}
