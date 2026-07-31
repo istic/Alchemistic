@@ -27,3 +27,5 @@ yarn-error.log
 /.claude/settings.local.json
 /resources/icons
 *.pid
+
+graphify-out
