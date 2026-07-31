@@ -10,5 +10,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('sftp/password', 'pages::sftp.password')->name('sftp.password');
 });
 
-require __DIR__ . '/settings.php';
-require __DIR__ . '/oauth.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/oauth.php';

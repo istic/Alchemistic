@@ -18,6 +18,7 @@ class GrantPermission extends Command
 
         if (! $user) {
             $this->error("User [{$this->argument('user')}] not found.");
+
             return self::FAILURE;
         }
 
@@ -26,11 +27,13 @@ class GrantPermission extends Command
         if (! $permission) {
             $available = Permission::orderBy('name')->pluck('name')->join(', ');
             $this->error("Permission [{$this->argument('permission')}] not found. Available: {$available}");
+
             return self::FAILURE;
         }
 
         if ($user->permissions()->where('permission_id', $permission->id)->exists()) {
             $this->info("User [{$user->email}] already has permission [{$permission->name}].");
+
             return self::SUCCESS;
         }
 

@@ -1,7 +1,9 @@
 <?php
 
+use Laravel\Fortify\Features;
+
 test('registration screen can be rendered', function () {
-    if (!config('fortify.features') || !in_array(Laravel\Fortify\Features::registration(), config('fortify.features'))) {
+    if (! config('fortify.features') || ! in_array(Features::registration(), config('fortify.features'))) {
         $this->markTestSkipped('Registration is disabled.');
     }
     $response = $this->get(route('register'));
@@ -10,7 +12,7 @@ test('registration screen can be rendered', function () {
 });
 
 test('new users can register', function () {
-    if (!config('fortify.features') || !in_array(Laravel\Fortify\Features::registration(), config('fortify.features'))) {
+    if (! config('fortify.features') || ! in_array(Features::registration(), config('fortify.features'))) {
         $this->markTestSkipped('Registration is disabled.');
     }
     $response = $this->post(route('register.store'), [

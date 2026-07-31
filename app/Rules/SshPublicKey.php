@@ -58,6 +58,7 @@ class SshPublicKey implements ValidationRule
         foreach (self::PRIVATE_KEY_MARKERS as $marker) {
             if (str_contains($trimmed, $marker)) {
                 $fail('The :attribute must be a public key, not a private key.');
+
                 return;
             }
         }
@@ -70,6 +71,7 @@ class SshPublicKey implements ValidationRule
                 } catch (\InvalidArgumentException $e) {
                     $fail($e->getMessage());
                 }
+
                 return;
             }
         }
@@ -78,6 +80,7 @@ class SshPublicKey implements ValidationRule
 
         if (count($parts) < 2) {
             $fail('The :attribute must be a valid SSH public key.');
+
             return;
         }
 
@@ -85,6 +88,7 @@ class SshPublicKey implements ValidationRule
 
         if (! in_array($type, self::KEY_TYPES, true)) {
             $fail('The :attribute has an unsupported key type.');
+
             return;
         }
 
@@ -92,11 +96,13 @@ class SshPublicKey implements ValidationRule
 
         if ($decoded === false) {
             $fail('The :attribute key data is not valid base64.');
+
             return;
         }
 
         if (strlen($decoded) < 4) {
             $fail('The :attribute is not a valid SSH public key.');
+
             return;
         }
 
@@ -104,6 +110,7 @@ class SshPublicKey implements ValidationRule
 
         if (strlen($decoded) < 4 + $len) {
             $fail('The :attribute is not a valid SSH public key.');
+
             return;
         }
 
@@ -139,24 +146,24 @@ class SshPublicKey implements ValidationRule
     private static function encodeRsaOpenSsh(array $rsa): string
     {
         $data = self::sshString('ssh-rsa')
-            . self::sshMpint($rsa['e'])
-            . self::sshMpint($rsa['n']);
+            .self::sshMpint($rsa['e'])
+            .self::sshMpint($rsa['n']);
 
-        return 'ssh-rsa ' . base64_encode($data);
+        return 'ssh-rsa '.base64_encode($data);
     }
 
     private static function sshString(string $s): string
     {
-        return pack('N', strlen($s)) . $s;
+        return pack('N', strlen($s)).$s;
     }
 
     private static function sshMpint(string $bytes): string
     {
         // Prepend zero byte if high bit is set (two's complement positive)
         if (strlen($bytes) > 0 && (ord($bytes[0]) & 0x80)) {
-            $bytes = "\x00" . $bytes;
+            $bytes = "\x00".$bytes;
         }
 
-        return pack('N', strlen($bytes)) . $bytes;
+        return pack('N', strlen($bytes)).$bytes;
     }
 }

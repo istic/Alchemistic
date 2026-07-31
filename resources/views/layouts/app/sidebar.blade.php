@@ -18,7 +18,7 @@
                 </flux:sidebar.item>
             </flux:sidebar.group>
 
-            
+
             @if (Auth::check())
                 <flux:sidebar.group :heading="__('Services')" class="grid">
                     @if ((Auth::user()->hasPermission('sftp_access') || Auth::user()->hasPermission('admin')))
@@ -36,7 +36,7 @@
                     </flux:sidebar.item>
                 </flux:sidebar.group>
                 @endif
-            @endif  
+            @endif
         </flux:sidebar.nav>
 
         <flux:spacer />

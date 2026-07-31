@@ -8,7 +8,8 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Symfony\Component\HttpFoundation\Response;
 
-new #[Title('Two-factor authentication')] class extends Component {
+new #[Title('Two-factor authentication')] class extends Component
+{
     public bool $twoFactorEnabled;
 
     public bool $requiresConfirmation;
