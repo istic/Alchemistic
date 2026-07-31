@@ -58,5 +58,9 @@ repos:
     rev: v1.5.0
     hooks:
       - id: detect-secrets
-        args: ["--baseline", ".secrets.baseline"]
-        exclude: package.lock.json
+        args:
+          - "--baseline"
+          - ".secrets.baseline"
+        exclude: package-lock.json
+        # To generate the initial baseline file:
+        # detect-secrets scan --all-files --exclude-files .env --exclude-files .*/cache/.* --exclude-files /graphify-out/.* package-lock.json  --exclude-files /vendor/.* --exclude-files ./node_modules/. > .secrets.baseline
